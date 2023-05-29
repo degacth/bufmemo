@@ -1,15 +1,15 @@
 package app.ui
 
 import com.github.kwhat.jnativehook.{GlobalScreen, NativeHookException}
-import com.github.kwhat.jnativehook.keyboard.{NativeKeyAdapter, NativeKeyEvent, NativeKeyListener}
+import com.github.kwhat.jnativehook.keyboard.{NativeKeyEvent, NativeKeyListener}
 
 import scala.collection.mutable
 
-case class GlobalKeyListener():
-  private val hotKeys = List(NativeKeyEvent.VC_ALT, NativeKeyEvent.VC_CONTROL, NativeKeyEvent.VC_SEMICOLON)
-  private val pressedHotKeys: mutable.Map[Int, Boolean] = mutable.Map(hotKeys.map(key => key -> false).toMap.toSeq: _*)
+case class GlobalKeyListener(hotKeys: Map[String, GlobalKeyListener.HotKeys]):
+  private val allHotKeys = hotKeys.values.flatMap(_.keys).toSet[Int]
+  private val pressedKeys: mutable.Map[Int, Boolean] = mutable.Map() ++ allHotKeys.map(_ -> false).toMap
 
-  def init(f: => Unit): () => Unit =
+  def init(): () => Unit =
     try
       GlobalScreen.registerNativeHook()
     catch
@@ -18,20 +18,22 @@ case class GlobalKeyListener():
       )
 
     val nativeKeyListener = new NativeKeyListener:
-      override def nativeKeyPressed(nativeKeyEvent: NativeKeyEvent): Unit = 
+      override def nativeKeyPressed(nativeKeyEvent: NativeKeyEvent): Unit =
         if !isInHotKeys(nativeKeyEvent.getKeyCode) then return ()
-        setHotKeyPressed(nativeKeyEvent.getKeyCode, value = true)
-        if (isAllKeyPressed) f
 
-      override def nativeKeyReleased(nativeKeyEvent: NativeKeyEvent): Unit = 
+        pressedKeys(nativeKeyEvent.getKeyCode) = true
+        pressedAction.foreach(_())
+
+      override def nativeKeyReleased(nativeKeyEvent: NativeKeyEvent): Unit =
         if !isInHotKeys(nativeKeyEvent.getKeyCode) then return ()
-        setHotKeyPressed(nativeKeyEvent.getKeyCode, value = false)
 
-      private def isInHotKeys(code: Int): Boolean = hotKeys.contains(code)
+        pressedKeys(nativeKeyEvent.getKeyCode) = false
 
-      private def setHotKeyPressed(code: Int, value: Boolean): Unit = pressedHotKeys(code) = value
+      private def isInHotKeys(code: Int): Boolean = allHotKeys.contains(code)
 
-      private def isAllKeyPressed: Boolean = pressedHotKeys.values.forall(v => v)
+      private def pressedAction: Option[() => Unit] =
+        val pressed = pressedKeys.filter((_, v) => v).keys.toList
+        hotKeys.values.find(hotkey => hotkey.keys.forall(pressed.contains(_))).map(_.handler)
 
     GlobalScreen.addNativeKeyListener(nativeKeyListener)
 
@@ -42,3 +44,6 @@ case class GlobalKeyListener():
       catch {
         case e: Exception => e.printStackTrace()
       }
+
+object GlobalKeyListener:
+  case class HotKeys(keys: List[Int], handler: () => Unit)

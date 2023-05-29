@@ -4,7 +4,9 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import app.server.{HttpServer, Routes}
+import app.ui.GlobalKeyListener.HotKeys
 import app.ui.{ClipboardListener, GlobalKeyListener, TrayManager}
+import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent
 
 import java.awt.{Desktop, Toolkit}
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, DataFlavor, StringSelection, Transferable}
@@ -26,16 +28,23 @@ import scala.util.{Failure, Success}
 
   def stopServer(): Unit = httpServer.unbind(binding).onComplete(_ => system.terminate())
 
-  val stopKeyListener = GlobalKeyListener().init {
-    if Desktop.isDesktopSupported then
-      Desktop.getDesktop.browse(new URI(s"${address._1}://localhost:${address._3}"))
-  }
-
+  val exit = () => System.exit(0)
   ClipboardListener()
 
-  TrayManager(onExit = {
-    stopServer()
-    stopKeyListener()
-    println("Application stopping ...")
-    System.exit(0)
-  }).init()
+  val stopKeyListener = GlobalKeyListener(Map(
+    "openAppUrl" -> HotKeys(List(
+      NativeKeyEvent.VC_ALT,
+      NativeKeyEvent.VC_CONTROL,
+      NativeKeyEvent.VC_SEMICOLON),
+      () =>
+        if Desktop.isDesktopSupported then
+          Desktop.getDesktop.browse(new URI(s"${address._1}://localhost:${address._3}"))),
+    "quitApp" -> HotKeys(List(
+      NativeKeyEvent.VC_ALT,
+      NativeKeyEvent.VC_CONTROL,
+      NativeKeyEvent.VC_Q),
+      exit
+    )
+  )).init()
+
+  TrayManager(exit).init()
