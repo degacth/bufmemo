@@ -38,11 +38,11 @@ import scala.util.{Failure, Success}
       NativeKeyEvent.VC_SEMICOLON),
       () =>
         if Desktop.isDesktopSupported then
-          Desktop.getDesktop.browse(new URI(s"${address._1}://localhost:${address._3}"))),
+          Desktop.getDesktop.browse(new URI(AppConfig.client.address))),
     "quitApp" -> HotKeys(List(
       NativeKeyEvent.VC_ALT,
       NativeKeyEvent.VC_CONTROL,
-      NativeKeyEvent.VC_Q),
+      NativeKeyEvent.VC_CLOSE_BRACKET),
       exit
     )
   )).init()

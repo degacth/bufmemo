@@ -13,9 +13,12 @@ lazy val root = project
     scalaVersion := scala3Version,
     libraryDependencies ++= Seq(
       "com.github.kwhat" % "jnativehook" % "2.2.2",
+      "ch.qos.logback" % "logback-classic" % "1.4.7" % Runtime,
+
       "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
       "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
       "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
+
       "com.typesafe.akka" %% "akka-actor-testkit-typed" % AkkaVersion % Test
     )
   )
