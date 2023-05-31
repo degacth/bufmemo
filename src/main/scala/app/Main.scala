@@ -22,8 +22,9 @@ import scala.util.{Failure, Success}
   import akka.http.scaladsl.server.Directives._
 
   val address = ("http", "0.0.0.0", 8000)
+  val routes = server.Routes()
 
-  val httpServer = HttpServer(Routes.statics)
+  val httpServer = HttpServer(routes.statics)
   val binding = httpServer.serve(address._2, address._3)
 
   def stopServer(): Unit = httpServer.unbind(binding).onComplete(_ => system.terminate())

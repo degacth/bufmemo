@@ -4,7 +4,7 @@ import java.awt.{Image, MenuItem, PopupMenu, SystemTray, TrayIcon}
 import javax.imageio.ImageIO
 import javax.swing.{ImageIcon, UIManager}
 
-class TrayManager(onExit: => Unit):
+class TrayManager(onExit: () => Unit):
 
   private val isTraySupported = SystemTray.isSupported
   private lazy val tray = SystemTray.getSystemTray
@@ -19,7 +19,7 @@ class TrayManager(onExit: => Unit):
     val exitItem = new MenuItem("Exit")
     exitItem.addActionListener(_ => {
       exit()
-      onExit
+      onExit()
     })
 
     popup.add(exitItem)

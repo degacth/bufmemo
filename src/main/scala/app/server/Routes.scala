@@ -2,8 +2,9 @@ package app.server
 
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directives, Route}
+import akka.stream.Materializer
 
-object Routes extends Directives:
+class Routes()(implicit mat: Materializer) extends Directives:
   val statics: Route =
     get {
       (pathEndOrSingleSlash & redirectToTrailingSlashIfMissing(StatusCodes.TemporaryRedirect)) {
@@ -11,4 +12,6 @@ object Routes extends Directives:
       } ~ {
         getFromResourceDirectory("static")
       }
+    } ~ path("echo") {
+      handleWebSocketMessages(WSEcho.echo)
     }
