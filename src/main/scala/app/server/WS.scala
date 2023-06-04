@@ -1,7 +1,7 @@
 package app.server
 
 import akka.actor.Status.Success
-import akka.actor.typed.ActorRef
+import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.http.scaladsl.server.Directives
 import akka.stream.{AbruptStageTerminationException, CompletionStrategy, FlowShape, Materializer, OverflowStrategy}
@@ -12,7 +12,8 @@ import akka.stream.typed.scaladsl.ActorSource
 sealed trait SocketMessage:
   val payload: Any
 
-case class ClientJoined(id: String, ref: ActorRef[Any])
+
+case class ClientJoined(id: String, ref: ActorRef[SocketMessage])
 
 case class ClientLeave(id: String)
 
@@ -20,6 +21,8 @@ case class ClientMessage(clientId: String, msg: SocketMessage)
 
 sealed trait EmptySocketMessage extends SocketMessage:
   override val payload: Any = null
+
+case object StopMessages extends EmptySocketMessage
 
 case class ParseErrorSocketMessage(payload: String) extends SocketMessage
 
@@ -35,9 +38,12 @@ object SocketMessagesOpts:
   implicit class MessageFromString(msg: String):
     def fromStringMessage: Either[Error, SocketMessage] = decode[SocketMessage](msg)
 
-object WS extends Directives:
+class WS()(implicit as: ActorSystem[Any]) extends Directives:
 
-  def makeConnectionHandler(source: Source[SocketMessage, ActorRef[Any]], connections: ActorRef[Any]): Flow[Message, Message, Any] =
+  def makeConnectionHandler(
+                             source: Source[SocketMessage, ActorRef[SocketMessage]],
+                             connections: ActorRef[Any]
+                           ): Flow[Message, Message, Any] =
     val clientId = java.util.UUID.randomUUID().toString
 
     Flow fromGraph GraphDSL.createGraph(source) { implicit b =>
@@ -59,7 +65,7 @@ object WS extends Directives:
 
         val sink = ActorSink.actorRef[Any](connections, ClientLeave(clientId), {
           case _: AbruptStageTerminationException =>
-          case e: Throwable => println(s"sink error ${e.toString}")
+          case e: Throwable => as.log.warn(s"sink error ${e.toString}")
         })
 
         mat ~> merge ~> sink
@@ -68,15 +74,15 @@ object WS extends Directives:
         FlowShape(incomingMessage.in, outgoingMessage.out)
     }
 
-  def makeConnectionSource: Source[SocketMessage, ActorRef[Any]] = ActorSource.actorRef[SocketMessage](
+  def makeConnectionSource: Source[SocketMessage, ActorRef[SocketMessage]] = ActorSource.actorRef[SocketMessage](
     completionMatcher = {
-      case m =>
-        println(s"source completed $m")
+      case StopMessages =>
+        as.log.info(s"source completed")
         CompletionStrategy.immediately
     },
     failureMatcher = {
-      case e =>
-        println(s"source error $e")
+      case e: Throwable =>
+        as.log.warn(s"source error $e")
         Exception(s"connection source exception $e")
     },
     bufferSize = 8,

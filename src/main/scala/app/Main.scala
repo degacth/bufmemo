@@ -22,7 +22,7 @@ import scala.util.{Failure, Success}
   import akka.http.scaladsl.server.Directives._
 
   val address = ("http", "0.0.0.0", 8000)
-  val routes = server.Routes()
+  val routes = server.Routes(system)
 
   val httpServer = HttpServer(routes.statics)
   val binding = httpServer.serve(address._2, address._3)
