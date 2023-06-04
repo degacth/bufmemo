@@ -9,42 +9,14 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Sink, Source}
 import akka.stream.typed.scaladsl.ActorSink
 import akka.stream.typed.scaladsl.ActorSource
 
-sealed trait SocketMessage:
-  val payload: Any
+class WS()(implicit as: ActorSystem[_]) extends Directives:
+  private val LOG_TAG = "APP WS"
 
+  def makeConnectionHandler(source: Source[SocketMessage, ActorRef[SocketMessage]],
+                            connections: ActorRef[Any]): Flow[Message, Message, Any] =
 
-case class ClientJoined(id: String, ref: ActorRef[SocketMessage])
-
-case class ClientLeave(id: String)
-
-case class ClientMessage(clientId: String, msg: SocketMessage)
-
-sealed trait EmptySocketMessage extends SocketMessage:
-  override val payload: Any = null
-
-case object StopMessages extends EmptySocketMessage
-
-case class ParseErrorSocketMessage(payload: String) extends SocketMessage
-
-case object HelloMsg extends EmptySocketMessage // Without any implementation of SocketMessage circe does not works
-
-object SocketMessagesOpts:
-
-  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
-
-  implicit class MessageToString(msg: SocketMessage):
-    def toStrMsg: String = msg.asJson.noSpaces
-
-  implicit class MessageFromString(msg: String):
-    def fromStringMessage: Either[Error, SocketMessage] = decode[SocketMessage](msg)
-
-class WS()(implicit as: ActorSystem[Any]) extends Directives:
-
-  def makeConnectionHandler(
-                             source: Source[SocketMessage, ActorRef[SocketMessage]],
-                             connections: ActorRef[Any]
-                           ): Flow[Message, Message, Any] =
     val clientId = java.util.UUID.randomUUID().toString
+    as.log.info(s"$LOG_TAG create connection for client with ID $clientId")
 
     Flow fromGraph GraphDSL.createGraph(source) { implicit b =>
       connection =>
@@ -53,6 +25,7 @@ class WS()(implicit as: ActorSystem[Any]) extends Directives:
 
         val mat = b.materializedValue.map(sock => ClientJoined(clientId, sock))
         val merge = b add Merge[Any](2)
+
         val incomingMessage: FlowShape[Message, SocketMessage] = b.add(Flow[Message] collect {
           case TextMessage.Strict(msg) => msg.fromStringMessage.getOrElse(ParseErrorSocketMessage(msg))
         })
@@ -65,7 +38,7 @@ class WS()(implicit as: ActorSystem[Any]) extends Directives:
 
         val sink = ActorSink.actorRef[Any](connections, ClientLeave(clientId), {
           case _: AbruptStageTerminationException =>
-          case e: Throwable => as.log.warn(s"sink error ${e.toString}")
+          case e: Throwable => as.log.warn(s"$LOG_TAG sink error ${e.toString}")
         })
 
         mat ~> merge ~> sink
@@ -77,12 +50,12 @@ class WS()(implicit as: ActorSystem[Any]) extends Directives:
   def makeConnectionSource: Source[SocketMessage, ActorRef[SocketMessage]] = ActorSource.actorRef[SocketMessage](
     completionMatcher = {
       case StopMessages =>
-        as.log.info(s"source completed")
+        as.log.info(s"$LOG_TAG source completed")
         CompletionStrategy.immediately
     },
     failureMatcher = {
       case e: Throwable =>
-        as.log.warn(s"source error $e")
+        as.log.warn(s"$LOG_TAG source error $e")
         Exception(s"connection source exception $e")
     },
     bufferSize = 8,
