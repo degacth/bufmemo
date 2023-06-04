@@ -13,5 +13,5 @@ class Routes()(implicit mat: Materializer) extends Directives:
         getFromResourceDirectory("static")
       }
     } ~ path("echo") {
-      handleWebSocketMessages(WSEcho.echo)
+      handleWebSocketMessages(???)
     }
