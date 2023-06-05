@@ -13,6 +13,7 @@ case class ClientMessage(clientId: String, msg: SocketMessage)
 sealed trait EmptySocketMessage extends SocketMessage:
   override val payload: Any = null
 
+case class BufferChanged(payload: String) extends SocketMessage
 case object StopMessages extends EmptySocketMessage
 case class ParseErrorSocketMessage(payload: String) extends SocketMessage
 

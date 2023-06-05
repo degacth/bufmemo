@@ -1,8 +1,9 @@
-package app.ui
+package app.buffer
 
 import java.awt.Toolkit
-import java.awt.datatransfer.{Clipboard, ClipboardOwner, DataFlavor, FlavorEvent, FlavorListener, Transferable}
+import java.awt.datatransfer.*
 
+// https://cooltrickshome.blogspot.com/2016/11/access-clipboard-content-using-java.html
 class ClipboardListener extends FlavorListener with ClipboardOwner:
   private val clip = Toolkit.getDefaultToolkit.getSystemClipboard
   private var latestClipboard: Any = ""
@@ -38,5 +39,3 @@ class ClipboardListener extends FlavorListener with ClipboardOwner:
   private def getCopiedString: Any = clip.getData(DataFlavor.stringFlavor)
 
   private def getCopiedImage: Any = clip.getData(DataFlavor.imageFlavor)
-
-// https://cooltrickshome.blogspot.com/2016/11/access-clipboard-content-using-java.html

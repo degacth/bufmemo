@@ -3,9 +3,10 @@ package app
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
+import app.buffer.ClipboardListener
 import app.server.{HttpServer, Routes}
 import app.ui.GlobalKeyListener.HotKeys
-import app.ui.{ClipboardListener, GlobalKeyListener, TrayManager}
+import app.ui.{GlobalKeyListener, TrayManager}
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent
 
 import java.awt.{Desktop, Toolkit}
