@@ -7,16 +7,16 @@ object BufferManagerActor:
   private lazy val TAG: String = getClass.getSimpleName
 
   sealed trait BufferMessage
-  case class BufferChanged(value: String) extends BufferMessage
+  case class NewBuffer(value: String) extends BufferMessage
 
   def apply(manager: app.buffer.BufferManager, receiver: ActorRef[Any]): Behavior[BufferMessage] =
     Behaviors.setup { ctx =>
       manager.onChanged { content =>
-        ctx.self ! BufferChanged(content)
+        ctx.self ! NewBuffer(content)
       }
 
       Behaviors.receiveMessage {
-        case m@BufferChanged(v) =>
+        case m@NewBuffer(v) =>
           ctx.log.info(s"$TAG got message $v")
           receiver ! m
           Behaviors.same

@@ -4,7 +4,7 @@ import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
-import app.actors.BufferManagerActor
+import app.actors.{BufferManagerActor, ConnectionsActor}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -23,31 +23,18 @@ class WSTest extends WsSpecBase:
     }
 
     describe("When clip changed") {
-      object Connections:
-        def apply(conns: Map[String, ActorRef[SocketMessage]] = Map.empty): Behavior[Any] = Behaviors.setup { ctx =>
-          Behaviors.receiveMessage {
-            case ClientJoined(id, client) =>
-              apply(conns + (id -> client))
-            case app.actors.BufferManagerActor.BufferChanged(value) =>
-              conns.values.foreach { ref =>
-                ref ! app.server.BufferChanged(value)
-              }
-              Behaviors.same
-          }
-        }
-
       object bufferManager extends app.buffer.BufferManager:
         override def onChanged(handler: String => Unit): Unit = ()
         override def update(value: String): Unit = ()
 
-      val connections = testKit.spawn(Connections(), "connections")
+      val connections = testKit.spawn(ConnectionsActor(), "connections")
       val bufferActor = testKit.spawn(BufferManagerActor(bufferManager, connections), "buffer")
 
       it("should send message to client about it") {
         withWsClient(connections) { client =>
-          client.sendMessage("just to init client")
+          client.sendMessage(ClientConnected.toStrMsg)
           val textBuffer = "test"
-          bufferActor ! app.actors.BufferManagerActor.BufferChanged(textBuffer)
+          bufferActor ! app.actors.BufferManagerActor.NewBuffer(textBuffer)
           client.expectMessage(app.server.BufferChanged(textBuffer).toStrMsg)
         }
       }

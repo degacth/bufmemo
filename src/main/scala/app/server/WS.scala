@@ -10,13 +10,13 @@ import akka.stream.typed.scaladsl.ActorSink
 import akka.stream.typed.scaladsl.ActorSource
 
 class WS()(implicit as: ActorSystem[_]) extends Directives:
-  private val LOG_TAG = "APP WS"
+  private val TAG = getClass.getSimpleName
 
   def makeConnectionHandler(source: Source[SocketMessage, ActorRef[SocketMessage]],
                             connections: ActorRef[Any]): Flow[Message, Message, Any] =
 
     val clientId = java.util.UUID.randomUUID().toString
-    as.log.info(s"$LOG_TAG create connection for client with ID $clientId")
+    as.log.info(s"$TAG create connection for client with ID $clientId")
 
     Flow fromGraph GraphDSL.createGraph(source) { implicit b =>
       connection =>
@@ -38,7 +38,7 @@ class WS()(implicit as: ActorSystem[_]) extends Directives:
 
         val sink = ActorSink.actorRef[Any](connections, ClientLeave(clientId), {
           case _: AbruptStageTerminationException =>
-          case e: Throwable => as.log.warn(s"$LOG_TAG sink error ${e.toString}")
+          case e: Throwable => as.log.warn(s"$TAG sink error ${e.toString}")
         })
 
         mat ~> merge ~> sink
@@ -50,12 +50,12 @@ class WS()(implicit as: ActorSystem[_]) extends Directives:
   def makeConnectionSource: Source[SocketMessage, ActorRef[SocketMessage]] = ActorSource.actorRef[SocketMessage](
     completionMatcher = {
       case StopMessages =>
-        as.log.info(s"$LOG_TAG source completed")
+        as.log.info(s"$TAG source completed")
         CompletionStrategy.immediately
     },
     failureMatcher = {
       case e: Throwable =>
-        as.log.warn(s"$LOG_TAG source error $e")
+        as.log.warn(s"$TAG source error $e")
         Exception(s"connection source exception $e")
     },
     bufferSize = 8,
