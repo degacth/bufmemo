@@ -3,7 +3,7 @@ package app
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
-import app.buffer.ClipboardListener
+import app.actors.MainActor
 import app.server.{HttpServer, Routes}
 import app.ui.GlobalKeyListener.HotKeys
 import app.ui.{GlobalKeyListener, TrayManager}
@@ -13,11 +13,12 @@ import java.awt.{Desktop, Toolkit}
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, DataFlavor, StringSelection, Transferable}
 import scala.io.StdIn
 import java.net.URI
+import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
 
 @main def run(): Unit =
-  implicit val system = ActorSystem(Behaviors.empty, "app-system")
-  implicit val ec = system.executionContext
+  implicit val system: ActorSystem[Any] = ActorSystem(MainActor(), "app-system")
+  implicit val ec: ExecutionContextExecutor = system.executionContext
 
   import akka.http.scaladsl.model._
   import akka.http.scaladsl.server.Directives._
@@ -31,7 +32,6 @@ import scala.util.{Failure, Success}
   def stopServer(): Unit = httpServer.unbind(binding).onComplete(_ => system.terminate())
 
   val exit = () => System.exit(0)
-  ClipboardListener()
 
   val stopKeyListener = GlobalKeyListener(Map(
     "openAppUrl" -> HotKeys(List(

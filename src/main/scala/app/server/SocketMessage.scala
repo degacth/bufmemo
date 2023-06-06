@@ -2,19 +2,19 @@ package app.server
 
 import akka.actor.typed.ActorRef
 
+sealed trait WsConnectionMessage
+case class ClientJoined(id: String, ref: ActorRef[SocketMessage]) extends WsConnectionMessage
+case class ClientLeave(id: String) extends WsConnectionMessage
+case class ClientMessage(clientId: String, msg: SocketMessage) extends WsConnectionMessage
 
 sealed trait SocketMessage:
   val payload: Any
-
-case class ClientJoined(id: String, ref: ActorRef[SocketMessage])
-case class ClientLeave(id: String)
-case class ClientMessage(clientId: String, msg: SocketMessage)
 
 sealed trait EmptySocketMessage extends SocketMessage:
   override val payload: Any = null
 
 case object ClientConnected extends EmptySocketMessage
-case class BufferChanged(payload: String) extends SocketMessage
+case class WsClipboardChanged(payload: String) extends SocketMessage
 case object StopMessages extends EmptySocketMessage
 case class ParseErrorSocketMessage(payload: String) extends SocketMessage
 

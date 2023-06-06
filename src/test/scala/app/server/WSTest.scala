@@ -4,7 +4,7 @@ import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
-import app.actors.{BufferManagerActor, ConnectionsActor}
+import app.actors.{ClipboardActor, ConnectionsActor}
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should
@@ -23,19 +23,20 @@ class WSTest extends WsSpecBase:
     }
 
     describe("When clip changed") {
-      object bufferManager extends app.buffer.BufferManager:
-        override def onChanged(handler: String => Unit): Unit = ()
-        override def update(value: String): Unit = ()
-
       val connections = testKit.spawn(ConnectionsActor(), "connections")
-      val bufferActor = testKit.spawn(BufferManagerActor(bufferManager, connections), "buffer")
+      val mediator = testKit.spawn(Behaviors.receiveMessage {
+        case ClipboardActor.ClipboardChanged(content) =>
+          connections ! WsClipboardChanged(content.toString)
+          Behaviors.same
+      }, "mediator")
+      val clipboard = testKit.spawn(ClipboardActor(mediator, false), "clipboard")
 
       it("should send message to client about it") {
         withWsClient(connections) { client =>
           client.sendMessage(ClientConnected.toStrMsg)
           val textBuffer = "test"
-          bufferActor ! app.actors.BufferManagerActor.NewBuffer(textBuffer)
-          client.expectMessage(app.server.BufferChanged(textBuffer).toStrMsg)
+          clipboard ! ClipboardActor.ClipboardChanged(textBuffer)
+          client.expectMessage(app.server.WsClipboardChanged(textBuffer).toStrMsg)
         }
       }
     }
