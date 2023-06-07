@@ -5,7 +5,7 @@ import akka.actor.typed.ActorRef
 sealed trait WsConnectionMessage
 case class ClientJoined(id: String, ref: ActorRef[SocketMessage]) extends WsConnectionMessage
 case class ClientLeave(id: String) extends WsConnectionMessage
-case class ClientMessage(clientId: String, msg: SocketMessage) extends WsConnectionMessage
+case class ClientMessage(clientId: String, msg: SocketMessage)
 
 sealed trait SocketMessage:
   val payload: Any

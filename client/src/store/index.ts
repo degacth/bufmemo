@@ -5,11 +5,11 @@ const {
   VUE_APP_SERVER_WS,
 } = process.env
 
-const wsAddress = `${VUE_APP_SERVER_WS}://${VUE_APP_SERVER_ADDRESS}/echo`
+const wsAddress = `${VUE_APP_SERVER_WS}://${VUE_APP_SERVER_ADDRESS}/ws`
 const ws = new WebSocket(wsAddress)
 
 ws.onopen = () => console.log('opened')
-ws.onmessage = data => console.log(data)
+ws.onmessage = event => console.log(JSON.parse(event.data))
 ws.onclose = console.log
 ws.onerror = console.error
 

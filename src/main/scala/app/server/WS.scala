@@ -2,6 +2,7 @@ package app.server
 
 import akka.actor.Status.Success
 import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.http.impl.engine.HttpIdleTimeoutException
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.http.scaladsl.server.Directives
 import akka.stream.{AbruptStageTerminationException, CompletionStrategy, FlowShape, Materializer, OverflowStrategy}
@@ -37,8 +38,12 @@ class WS()(implicit as: ActorSystem[_]) extends Directives:
         })
 
         val sink = ActorSink.actorRef[Any](connections, ClientLeave(clientId), {
-          case _: AbruptStageTerminationException =>
-          case e: Throwable => as.log.warn(s"$TAG sink error ${e.toString}")
+          case _: AbruptStageTerminationException => as.log.warn(s"$TAG sink abrupt")
+          case _: HttpIdleTimeoutException =>
+            ClientLeave(clientId)
+          case e: Throwable =>
+            as.log.warn(s"$TAG sink error ${e.toString}")
+            ClientLeave(clientId)
         })
 
         mat ~> merge ~> sink
