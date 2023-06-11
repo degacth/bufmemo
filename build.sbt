@@ -29,6 +29,7 @@ lazy val root = project
       "com.typesafe.akka" %% "akka-stream-typed" % AkkaVersion,
       "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
       "com.typesafe.akka" %% "akka-persistence-typed" % AkkaVersion,
+      "com.typesafe.akka" %% "akka-serialization-jackson" % AkkaVersion,
 
       "org.scalatest" %% "scalatest" % "3.2.16" % Test,
       "com.typesafe.akka" %% "akka-actor-testkit-typed" % AkkaVersion % Test,
