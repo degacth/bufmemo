@@ -17,6 +17,8 @@ case object ClientConnected extends EmptySocketMessage
 case class WsClipboardChanged(payload: String) extends SocketMessage
 case object StopMessages extends EmptySocketMessage
 case class ParseErrorSocketMessage(payload: String) extends SocketMessage
+case object WsGetClips extends EmptySocketMessage
+case class WsGotClips(payload: List[String]) extends SocketMessage
 
 object SocketMessagesOpts:
   import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._

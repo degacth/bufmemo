@@ -4,7 +4,7 @@ import akka.actor.Status.Success
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
 import akka.pattern.StatusReply
-import app.server.{WsClipboardChanged, WsConnectionMessage}
+import app.server.{ClientMessage, WsClipboardChanged, WsConnectionMessage, WsGetClips, WsGotClips}
 
 object MainActor:
   private val TAG = getClass.getSimpleName
@@ -24,6 +24,13 @@ object MainActor:
           Behaviors.same
         case m: WsConnectionMessage =>
           connectionsActor ! m
+          Behaviors.same
+        case ClientMessage(clientId, WsGetClips) =>
+          clipsHolder ! ClipsHolder.GetClips(ctx.self, clientId)
+          Behaviors.same
+        case ClipsHolder.GotClips(clips, clientId) =>
+          ctx.log.info(s"clips >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${clips}")
+          connectionsActor ! ClientMessage(clientId, WsGotClips(clips))
           Behaviors.same
         case m =>
           ctx.log.warn(s"$TAG unhandled message ${m.getClass.getCanonicalName}")

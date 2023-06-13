@@ -2,10 +2,11 @@ package app.actors
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
-import app.server.{ClientConnected, ClientJoined, ClientLeave, ClientMessage, SocketMessage, WsClipboardChanged}
+import app.server.*
 
 object ConnectionsActor:
   private val TAG = getClass.getSimpleName
+
   def apply(connections: Map[String, ActorRef[SocketMessage]] = Map.empty): Behavior[Any] = Behaviors.setup { ctx =>
     Behaviors.logMessages {
       Behaviors.receiveMessage {
@@ -15,6 +16,14 @@ object ConnectionsActor:
         case WsClipboardChanged(value) =>
           connections.values.foreach(_ ! WsClipboardChanged(value))
           Behaviors.same
+
+        case ClientMessage(clientId, msg) => msg match
+          case m: WsGotClips =>
+            connections.get(clientId).foreach(_ ! m)
+            Behaviors.same
+          case m =>
+            ctx.log.warn(s"unhandled client message $m")
+            Behaviors.same
       }
     }
   }
