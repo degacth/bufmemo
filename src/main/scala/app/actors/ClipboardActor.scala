@@ -30,6 +30,8 @@ object ClipboardActor:
 
           // todo copied images never changes path
           val content = getCopiedData
+          if content == null then return ()
+          if content.toString.isBlank then return ()
           if content == latestClip then return ()
 
           latestClip = content

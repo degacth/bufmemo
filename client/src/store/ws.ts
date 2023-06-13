@@ -5,14 +5,14 @@ export class WS {
   private connection?: WebSocket
   private stash: any[] = []
 
-  connect() {
+  connect = () => {
     const ws = new WebSocket(this.wsAddress)
     ws.onclose = () => {
-      console.log('connection closed');
+      console.log('connection closed')
       this.reconnect()
     }
     ws.onopen = () => {
-      console.log('connection opened');
+      console.log('connection opened')
       this.connection = ws
       this.stash.forEach(this.sendMessage)
       this.stash = []
