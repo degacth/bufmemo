@@ -1,6 +1,10 @@
 <template>
   <div class="home">
-    Hello World
+    <ul class="uk-list">
+      <li v-for="clip in $store.state.clips">
+        {{ clip }}
+      </li>
+    </ul>
   </div>
 </template>
 

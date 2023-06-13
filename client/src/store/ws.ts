@@ -14,6 +14,8 @@ export class WS {
     ws.onopen = () => {
       console.log('connection opened');
       this.connection = ws
+      this.stash.forEach(this.sendMessage)
+      this.stash = []
     }
     ws.onerror = console.error.bind(console)
     ws.onmessage = event => this.onReceive(JSON.parse(event.data))
@@ -21,10 +23,10 @@ export class WS {
 
   private reconnect = (): void => {
     this.connection = undefined
-    setTimeout(() => this.connect(), 5000) // TODO implement with fib numbers
+    setTimeout(this.connect, 5000) // TODO implement with fib numbers
   }
 
-  sendMessage(msg: any) {
+  sendMessage = (msg: any) => {
     if (this.connection == undefined) return this.stash.push(msg)
     this.connection!.send(JSON.stringify(msg))
   }
