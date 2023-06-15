@@ -8,12 +8,16 @@ const {
   VUE_APP_SERVER_WS,
 } = process.env
 
-const ws = new WS(`${VUE_APP_SERVER_WS}://${VUE_APP_SERVER_ADDRESS}/ws`, msg => {
-  const messageName = _.chain(msg).keys().first().value()
-  if (!_.keys(mutations).includes(messageName)) return
+const ws = new WS(`${VUE_APP_SERVER_WS}://${VUE_APP_SERVER_ADDRESS}/ws`,
+  msg => {
+    const messageName = _.chain(msg).keys().first().value()
+    if (!_.keys(mutations).includes(messageName)) return
 
-  store.commit(messageName, msg[messageName].payload)
-})
+    store.commit(messageName, msg[messageName].payload)
+  },
+  () => {
+    ws.sendMessage(loadClips)
+  })
 
 ws.connect()
 
@@ -29,8 +33,6 @@ const mutations: MutationTree<State> = {
     ws.sendMessage(loadClips)
   }
 }
-
-ws.sendMessage(loadClips)
 
 const store = createStore<State>({
   state: {

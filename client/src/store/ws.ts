@@ -1,5 +1,5 @@
 export class WS {
-  constructor(private wsAddress: string, private onReceive: (msg: any) => void) {
+  constructor(private wsAddress: string, private onReceive: (msg: any) => void, private onConnected: () => void) {
   }
 
   private connection?: WebSocket
@@ -16,6 +16,7 @@ export class WS {
       this.connection = ws
       this.stash.forEach(this.sendMessage)
       this.stash = []
+      this.onConnected()
     }
     ws.onerror = console.error.bind(console)
     ws.onmessage = event => this.onReceive(JSON.parse(event.data))
