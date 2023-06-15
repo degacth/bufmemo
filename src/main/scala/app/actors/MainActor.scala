@@ -20,7 +20,7 @@ object MainActor:
           connectionsActor ! WsClipboardChanged(content)
           Behaviors.same
         case ClipboardActor.ClipboardChanged(content) =>
-          clipsHolder ! ClipsHolder.AddClipboard(content.toString, ctx.self)
+          clipsHolder ! ClipsHolder.AddClipboard(content, ctx.self)
           Behaviors.same
         case m: WsConnectionMessage =>
           connectionsActor ! m
@@ -29,7 +29,6 @@ object MainActor:
           clipsHolder ! ClipsHolder.GetClips(ctx.self, clientId)
           Behaviors.same
         case ClipsHolder.GotClips(clips, clientId) =>
-          ctx.log.info(s"clips >>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ${clips}")
           connectionsActor ! ClientMessage(clientId, WsGotClips(clips))
           Behaviors.same
         case m =>

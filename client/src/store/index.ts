@@ -16,12 +16,13 @@ const ws = new WS(`${VUE_APP_SERVER_WS}://${VUE_APP_SERVER_ADDRESS}/ws`, msg => 
 })
 
 ws.connect()
+
 export interface State {
-  clips: string[]
+  clips: ClipContent[]
 }
 
 const mutations: MutationTree<State> = {
-  WsGotClips(state, clips) {
+  WsGotClips(state, clips: ClipContent[]) {
     state.clips = clips
   },
   WsClipboardChanged() {

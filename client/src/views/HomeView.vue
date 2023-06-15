@@ -2,8 +2,8 @@
   <ul class="uk-list uk-margin-top uk-width-1-2@m uk-width-1-1@s uk-list-striped">
     <li v-for="clip in $store.state.clips">
       <div uk-grid>
-        <div class="uk-width-expand">
-          <div class="uk-text-truncate uk-text-muted uk-text-baseline">{{ clip }}</div>
+        <div class="uk-width-expand uk-flex uk-flex-middle">
+          <div class="uk-text-truncate uk-text-muted uk-text-baseline">{{ clip.content }}</div>
         </div>
         <div class="uk-width-1-4 uk-text-right">
           <button class="uk-icon-button uk-margin-small-right" uk-icon="move"></button>

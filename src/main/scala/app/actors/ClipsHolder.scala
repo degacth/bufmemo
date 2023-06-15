@@ -5,17 +5,18 @@ import akka.pattern.StatusReply
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, ReplyEffect}
 import app.actors.serializers.CborSerializable
+import app.actors.model.Domain
 
 object ClipsHolder:
   sealed trait Command extends CborSerializable
-  final case class AddClipboard(content: String, ref: ActorRef[Event]) extends Command
+  final case class AddClipboard(content: Domain.ClipContent, ref: ActorRef[Event]) extends Command
   final case class GetClips(ref: ActorRef[Event], clientId: String) extends Command
 
   sealed trait Event extends CborSerializable
-  final case class AddedClip(content: String) extends Event
-  final case class GotClips(content: List[String], clientId: String) extends Event
+  final case class AddedClip(content: Domain.ClipContent) extends Event
+  final case class GotClips(content: List[Domain.ClipContent], clientId: String) extends Event
 
-  private final case class State(clips: List[String] = Nil)
+  private final case class State(clips: List[Domain.ClipContent] = Nil)
 
   def apply(): Behavior[Command] = EventSourcedBehavior.withEnforcedReplies[Command, Event, State](
     PersistenceId.ofUniqueId("clipboards"),

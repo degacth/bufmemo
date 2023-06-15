@@ -1,6 +1,7 @@
 package app.server
 
 import akka.actor.typed.ActorRef
+import app.actors.model.Domain
 
 sealed trait WsConnectionMessage
 case class ClientJoined(id: String, ref: ActorRef[SocketMessage]) extends WsConnectionMessage
@@ -14,11 +15,11 @@ sealed trait EmptySocketMessage extends SocketMessage:
   override val payload: Any = null
 
 case object ClientConnected extends EmptySocketMessage
-case class WsClipboardChanged(payload: String) extends SocketMessage
+case class WsClipboardChanged(payload: Domain.ClipContent) extends SocketMessage
 case object StopMessages extends EmptySocketMessage
 case class ParseErrorSocketMessage(payload: String) extends SocketMessage
 case object WsGetClips extends EmptySocketMessage
-case class WsGotClips(payload: List[String]) extends SocketMessage
+case class WsGotClips(payload: List[Domain.ClipContent]) extends SocketMessage
 
 object SocketMessagesOpts:
   import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
