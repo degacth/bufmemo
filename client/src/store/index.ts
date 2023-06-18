@@ -34,6 +34,10 @@ const mutations: MutationTree<State> = {
   }
 }
 
+export const actionNames = {
+  selectClip: 'select-clip',
+}
+
 const store = createStore<State>({
   state: {
     clips: [],
@@ -43,6 +47,13 @@ const store = createStore<State>({
   actions: {
     clips(ctx) {
       ws.sendMessage(loadClips)
+    },
+    [actionNames.selectClip](ctx, clipId: String) {
+      ws.sendMessage({
+        WsSetClip: {
+          payload: clipId
+        }
+      })
     }
   },
 })

@@ -20,6 +20,8 @@ case object StopMessages extends EmptySocketMessage
 case class ParseErrorSocketMessage(payload: String) extends SocketMessage
 case object WsGetClips extends EmptySocketMessage
 case class WsGotClips(payload: List[Domain.ClipContent]) extends SocketMessage
+case class WsSetClip(payload: String) extends SocketMessage
+case class WsClipUpdated(payload: String) extends SocketMessage
 
 object SocketMessagesOpts:
   import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._

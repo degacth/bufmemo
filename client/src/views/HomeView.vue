@@ -7,7 +7,7 @@
            href="#">
           <span class="uk-text-truncate" :title="clip.content">{{ clip.content }}</span>
         </a>
-        <div class="uk-width-1-4 uk-text-right">
+        <div class="uk-width-1-4 uk-text-right uk-hidden">
           <button class="uk-icon-button uk-margin-small-right" uk-icon="pencil"></button>
           <button class="uk-icon-button uk-margin-small-right" uk-icon="check"></button>
           <button class="uk-icon-button uk-button-danger" uk-icon="close"></button>
@@ -20,6 +20,7 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
 import * as _ from 'lodash'
+import {actionNames} from '@/store'
 
 export default defineComponent({
   methods: {
@@ -36,7 +37,8 @@ export default defineComponent({
       }
     },
     selectClip(clip: ClipContent) {
-      // TODO send event
+      if (this.isCurrent(clip)) return
+      this.$store.dispatch(actionNames.selectClip, clip.id)
     }
   }
 });

@@ -8,8 +8,9 @@ import app.server.{ClientMessage, WsClipboardChanged, WsConnectionMessage, WsGet
 
 object MainActor:
   private val TAG = getClass.getSimpleName
-
   def apply(): Behavior[Any] = Behaviors.setup { ctx =>
+    println(app.server.SocketMessagesOpts.MessageToString(app.server.WsSetClip("hello")).toStrMsg)
+
     val connectionsActor = ctx.spawn(ConnectionsActor(), "connections")
     val clipboardActor = ctx.spawn(ClipboardActor(ctx.self), "clipboard")
     val clipsHolder = ctx.spawn(ClipsHolder(), "clips-holder")

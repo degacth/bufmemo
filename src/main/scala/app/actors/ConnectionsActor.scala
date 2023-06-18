@@ -13,6 +13,7 @@ object ConnectionsActor:
         case ClientJoined(id, client) => apply(connections + (id -> client))
         case ClientLeave(id) => apply(connections - id)
         case ClientMessage(_, ClientConnected) => Behaviors.same
+        case ClientMessage(clientId, setClip: WsSetClip) => 
         case WsClipboardChanged(value) =>
           connections.values.foreach(_ ! WsClipboardChanged(value))
           Behaviors.same
