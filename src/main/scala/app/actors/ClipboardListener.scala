@@ -19,6 +19,7 @@ class ClipboardListener(val log: Logger,
     catch case e: InterruptedException => log.warn(s"${e.getMessage}")
 
   def setClip(content: String): Unit =
+    latestClip = content
     val selection = StringSelection(content)
     clip.setContents(selection, selection)
 

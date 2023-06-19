@@ -8,7 +8,11 @@ object AppConfig:
     val address: String = conf.getString("address")
 
   class SystemConfig(conf: Config):
-    val name = conf.getString("name")
+    class ClipboardConfig(conf: Config):
+      val maxItems: Int = conf.getInt("max-items")
+
+    val name: String = conf.getString("name")
+    val clipboard: ClipboardConfig = ClipboardConfig(conf.getConfig("clipboard"))
 
   private val env = sys.env.getOrElse("BUFMEMO_ENV", "prod")
   private val config = ConfigFactory.load(env).withFallback(ConfigFactory.defaultReference())
