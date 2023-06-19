@@ -4,37 +4,28 @@ import akka.actor.Status.Success
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
 import akka.pattern.StatusReply
-import app.server.{ClientMessage, WsClipboardChanged, WsConnectionMessage, WsGetClips, WsGotClips}
+import app.actors.model.Domain
+import app.server.*
 
 object MainActor:
   private val TAG = getClass.getSimpleName
+
   def apply(): Behavior[Any] = Behaviors.setup { ctx =>
-    println(app.server.SocketMessagesOpts.MessageToString(app.server.WsSetClip("hello")).toStrMsg)
 
     val connectionsActor = ctx.spawn(ConnectionsActor(), "connections")
-    val clipboardActor = ctx.spawn(ClipboardActor(ctx.self), "clipboard")
-    val clipsHolder = ctx.spawn(ClipsHolder(), "clips-holder")
+    val clipsHolder = ctx.spawn(ClipsHolder(ctx.self), "clips-holder")
 
     Behaviors.logMessages {
-      Behaviors.receiveMessage {
-        case ClipsHolder.AddedClip(content) =>
-          connectionsActor ! WsClipboardChanged(content)
-          Behaviors.same
-        case ClipboardActor.ClipboardChanged(content) =>
-          clipsHolder ! ClipsHolder.AddClipboard(content, ctx.self)
-          Behaviors.same
-        case m: WsConnectionMessage =>
-          connectionsActor ! m
-          Behaviors.same
-        case ClientMessage(clientId, WsGetClips) =>
-          clipsHolder ! ClipsHolder.GetClips(ctx.self, clientId)
-          Behaviors.same
-        case ClipsHolder.GotClips(clips, clientId) =>
-          connectionsActor ! ClientMessage(clientId, WsGotClips(clips))
-          Behaviors.same
-        case m =>
-          ctx.log.warn(s"$TAG unhandled message ${m.getClass.getCanonicalName}")
-          Behaviors.same
+      Behaviors.receiveMessage { (m: Any) =>
+        m match
+          case ClipsHolder.AddedClip(content) => connectionsActor ! WsClipboardChanged(content)
+          case ClipsHolder.CurrentClipUpdated(_, clipId) => connectionsActor ! WsClipboardChanged(Domain.ClipContent(clipId, ""))
+          case ClientMessage(clientId, WsSetClip(clipId)) => clipsHolder ! ClipsHolder.UpdateCurrentClip(clientId, clipId)
+          case m: WsConnectionMessage => connectionsActor ! m
+          case ClientMessage(clientId, WsGetClips) => clipsHolder ! ClipsHolder.GetClips(ctx.self, clientId)
+          case ClipsHolder.GotClips(clips, clientId) => connectionsActor ! ClientMessage(clientId, WsGotClips(clips))
+          case m => ctx.log.warn(s"$TAG unhandled message ${m.getClass.getCanonicalName}")
+        Behaviors.same
       }
     }
   }

@@ -13,18 +13,18 @@ object ConnectionsActor:
         case ClientJoined(id, client) => apply(connections + (id -> client))
         case ClientLeave(id) => apply(connections - id)
         case ClientMessage(_, ClientConnected) => Behaviors.same
-        case ClientMessage(clientId, setClip: WsSetClip) => 
+        case ClientMessage(clientId, setClip: WsSetClip) => Behaviors.same
         case WsClipboardChanged(value) =>
           connections.values.foreach(_ ! WsClipboardChanged(value))
           Behaviors.same
 
-        case ClientMessage(clientId, msg) => msg match
-          case m: WsGotClips =>
-            connections.get(clientId).foreach(_ ! m)
-            Behaviors.same
-          case m =>
-            ctx.log.warn(s"unhandled client message $m")
-            Behaviors.same
+        case ClientMessage(clientId, msg) =>
+          msg match
+            case m: WsGotClips => connections.get(clientId).foreach(_ ! m)
+            case WsSetClip(clipId) => ???
+            case m => ctx.log.warn(s"unhandled client message $m")
+
+          Behaviors.same
       }
     }
   }
