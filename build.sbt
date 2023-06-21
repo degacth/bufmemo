@@ -4,6 +4,8 @@ val AkkaVersion = "2.8.2"
 val AkkaHttpVersion = "10.5.2"
 val circeVersion = "0.14.1"
 
+enablePlugins(JavaAppPackaging)
+
 lazy val root = project
   .in(file("."))
   .settings(
